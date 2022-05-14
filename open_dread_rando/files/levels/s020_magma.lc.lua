@@ -946,7 +946,12 @@ function s020_magma.OnEnter_Kraid_Activation_Stage_02B()
   end
 end
 
+s020_magma.bKraidKilledWithBellyPercent = false
+
 function s020_magma.OpenKraidMorphBallLauncherExit()
+  s020_magma.bKraidKilledWithBellyPercent = true
+  Game.LogWarn(0, "Belly%% morph ball exit opened! Prepare for belly.")
+
   local oActor = Game.GetActor("mblauncher_exit_gen_002")
   if oActor ~= nil then
     oActor.ANIMATION:SetAction("open", true)
@@ -1049,6 +1054,12 @@ end
 
 
 function s020_magma.Kraid_Activation_Stage_03_CutsceneEnd()
+  Game.LogWarn(0, "Kraid killed!")
+
+  if s020_magma.bKraidKilledWithBellyPercent then
+    Game.LogWarn(0, "Belly%% completed :D")
+    Game.GameCleared()
+  end
 
 end
 
