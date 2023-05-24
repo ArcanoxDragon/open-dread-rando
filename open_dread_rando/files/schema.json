@@ -336,6 +336,11 @@
                                     ],
                                     "default": "NEVER",
                                     "description": "Configures how the room name is displayed on the HUD. Defaults to disabled."
+                                },
+                                "show_debug_logs": {
+                                    "type": "boolean",
+                                    "default": false,
+                                    "description": "Enables in-game debug logging so that calls to Game.LogXyz are shown over the game itself"
                                 }
                             },
                             "additionalProperties": false

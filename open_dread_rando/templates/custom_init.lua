@@ -1,5 +1,9 @@
 Game.ImportLibrary("system/scripts/init_original.lua")
 
+if TEMPLATE("show_debug_logs") then
+    Game.ImportLibrary("system/scripts/logutil.lua")
+end
+
 local initOk, errorMsg = pcall(function()
 
 RemoteLua = RemoteLua or { 
