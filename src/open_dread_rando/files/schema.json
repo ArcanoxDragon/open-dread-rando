@@ -466,6 +466,11 @@
                     "type": "boolean",
                     "description": "Enable warping to the starting location from Save Stations.",
                     "default": true
+                },
+                "skip_raven_beak": {
+                    "type": "boolean",
+                    "description": "Skip the Raven Beak boss fight and go straight to credits.",
+                    "default": false
                 }
             },
             "additionalProperties": false

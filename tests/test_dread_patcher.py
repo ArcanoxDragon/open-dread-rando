@@ -50,6 +50,7 @@ def test_cosmetic_options(lua_runtime):
             "default_x_released": False,
             "enable_experiment_boss": True,
             "warp_to_start": True,
+            "skip_raven_beak": False,
         },
         "objective": {
             "required_artifacts": 3,

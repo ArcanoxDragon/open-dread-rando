@@ -241,6 +241,12 @@ end
 
 function s090_skybase.OnUsablePrepareUse(actor)
   Scenario.DisableGlobalTeleport(actor)
+
+  if Scenario.GetCharclass(actor) == "accesspointcommander" and Init.bSkipRavenBeak then
+    Game.LogWarn(0, "Skipping Raven Beak and finishing the game")
+    Game.GameCleared()
+    return
+  end
 end
 
 function s090_skybase.OnUsableCancelUse(actor)
