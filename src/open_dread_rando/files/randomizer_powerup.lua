@@ -126,7 +126,8 @@ function RandomizerPowerup.HandlePickupResources(progression)
             if shouldGrant then
                 for _, resource in ipairs(resource_list) do
                     Game.LogWarn(0, "Granting " .. resource.quantity .. " " .. resource.item_id)
-                    RandomizerPowerup.IncreaseItemAmount(resource.item_id, resource.quantity)
+                    local new_item_id, new_quantity = Scenario.Custom_OnResourceGranted(resource.item_id, resource.quantity)
+                    RandomizerPowerup.IncreaseItemAmount(new_item_id, new_quantity)
                 end
 
                 return resource_list

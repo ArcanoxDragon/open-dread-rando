@@ -2118,8 +2118,7 @@ function s010_cave.OnUsableCancelUse(actor)
     s010_cave.OnTutoMapRoomBegins(true)
   end
 
-  Scenario.ResetGlobalTeleport(actor)
-  Scenario.CheckWarpToStart(actor)
+  Scenario.Custom_OnUsableCancelUse(actor)
 end
 
 function s010_cave.OnUsablePrepareUse(actor)
@@ -2129,7 +2128,7 @@ function s010_cave.OnUsablePrepareUse(actor)
     s010_cave.OnTutoMapRoomBegins(false)
   end
 
-  Scenario.DisableGlobalTeleport(actor)
+  Scenario.Custom_OnUsablePrepareUse(actor)
 end
 
 function s010_cave.OnUsableUse(actor)
@@ -2137,7 +2136,7 @@ function s010_cave.OnUsableUse(actor)
     Scenario.WriteToBlackboard(Scenario.LUAPropIDs.CAVES_TUTO_MAP_ROOM_DONE, "b", true)
   end
 
-  Scenario.SetTeleportalUsed(actor)
+  Scenario.Custom_OnUsableUse(actor)
 end
 
 

@@ -240,16 +240,15 @@ function s090_skybase.cutsceneplayer_108_end()
 end
 
 function s090_skybase.OnUsablePrepareUse(actor)
-  Scenario.DisableGlobalTeleport(actor)
+  Scenario.Custom_OnUsablePrepareUse(actor)
 end
 
 function s090_skybase.OnUsableCancelUse(actor)
-  Scenario.ResetGlobalTeleport(actor)
-  Scenario.CheckWarpToStart(actor)
+  Scenario.Custom_OnUsableCancelUse(actor)
 end
 
 function s090_skybase.OnUsableUse(actor)
-  Scenario.SetTeleportalUsed(actor)
+  Scenario.Custom_OnUsableUse(actor)
 end
 
 function s090_skybase.OnEnter_AP_10()

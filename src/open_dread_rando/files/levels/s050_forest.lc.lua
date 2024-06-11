@@ -267,16 +267,15 @@ function s050_forest.OnUsableFinishInteract(_ARG_0_)
 end
 
 function s050_forest.OnUsablePrepareUse(actor)
-  Scenario.DisableGlobalTeleport(actor)
+  Scenario.Custom_OnUsablePrepareUse(actor)
 end
 
 function s050_forest.OnUsableCancelUse(actor)
-  Scenario.ResetGlobalTeleport(actor)
-  Scenario.CheckWarpToStart(actor)
+  Scenario.Custom_OnUsableCancelUse(actor)
 end
 
 function s050_forest.OnUsableUse(actor)
-  Scenario.SetTeleportalUsed(actor)
+  Scenario.Custom_OnUsableUse(actor)
 end
 
 

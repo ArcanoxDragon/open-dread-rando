@@ -444,6 +444,54 @@
                 }
             }
         },
+        "custom_lua_hooks": {
+            "type": "object",
+            "description": "Custom Lua code that runs when certain events occur in the game",
+            "additionalProperties": false,
+            "default": {},
+            "properties": {
+                "on_inventory_loaded": {
+                    "type": "string",
+                    "description": "Called when the player's inventory is loaded from the Blackboard (such as when loading a checkpoint, save file, etc). Single argument is \"scenario_id\".",
+                    "default": ""
+                },
+                "on_resource_granted": {
+                    "type": "string",
+                    "description": "Called when the player obtains an item (e.g. from a pickup, a boss, etc.). Arguments are \"item_id\" and \"quantity\". These may be reassigned to change what is granted.",
+                    "default": ""
+                },
+                "on_prepare_hint_text": {
+                    "type": "string",
+                    "description": "Called when the player steps onto an ADAM station pressure plate. Single argument is \"hint_id\" (can be reassigned to change which hint is displayed).",
+                    "default": ""
+                },
+                "on_scenario_loaded": {
+                    "type": "string",
+                    "description": "Called when the player loads into a new scenario (area). Single argument is \"scenario_id\".",
+                    "default": ""
+                },
+                "on_sub_area_change": {
+                    "type": "string",
+                    "description": "Called when the player moves into a new room. Arguments are \"scenario_id\", \"old_subarea\", \"new_subarea\".",
+                    "default": ""
+                },
+                "on_usable_prepare": {
+                    "type": "string",
+                    "description": "Called when the player is about to interact with a Usable (such as a save station, elevator, teleportal, etc.). Single argument is \"actor_name\".",
+                    "default": ""
+                },
+                "on_usable_use": {
+                    "type": "string",
+                    "description": "Called when the player confirms interaction with a Usable (such as a save station, elevator, teleportal, etc.). Single argument is \"actor_name\".",
+                    "default": ""
+                },
+                "on_usable_cancel": {
+                    "type": "string",
+                    "description": "Called when the player cancels interaction with a Usable (such as a save station, elevator, teleportal, etc.). Single argument is \"actor_name\".",
+                    "default": ""
+                }
+            }
+        },
         "enable_remote_lua": {
             "type": "boolean",
             "default": false,

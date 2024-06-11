@@ -123,6 +123,16 @@ def create_custom_init(editor: PatcherEditor, configuration: dict) -> str:
     return lua_util.replace_lua_template("custom_init.lua", replacement)
 
 
+def create_custom_scenario(configuration: dict) -> str:
+    custom_lua_hooks: dict = configuration["custom_lua_hooks"]
+    replacement = dict()
+
+    for key, value in custom_lua_hooks.items():
+        replacement[f"custom_{key}"] = value
+
+    return lua_util.replace_lua_template("custom_scenario.lua", replacement)
+
+
 def create_collision_camera_table(editor: PatcherEditor, configuration: dict):
     py_dict: dict = configuration["cosmetic_patches"]["lua"]["camera_names_dict"]
 
@@ -221,7 +231,11 @@ def patch_extracted(input_path: Path, output_path: Path, configuration: dict):
     create_collision_camera_table(editor, configuration)
 
     # Update scenario.lc
-    lua_util.replace_script(editor, "system/scripts/scenario", "custom_scenario.lua")
+    lua_util.create_script_copy(editor, "system/scripts/scenario")
+    editor.replace_asset(
+        "system/scripts/scenario.lc",
+        create_custom_scenario(configuration).encode("ascii"),
+    )
 
     # Update msemenu_mainmenu
     lua_util.replace_script(editor, "gui/scripts/msemenu_mainmenu", "msemenu_mainmenu.lua")

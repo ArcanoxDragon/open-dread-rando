@@ -41,6 +41,9 @@ function Scenario.CheckRandoHint(ap_id, hint_id)
     local access_point = Game.GetActor(ap_id)
     local seen = Scenario.ReadFromBlackboard(Scenario.tRandoHintPropIDs[hint_id], false)
     if access_point ~= nil and not seen then
+        pcall(function()
+            TEMPLATE("custom_on_prepare_hint_text")
+        end)
         access_point.USABLE:ActiveDialogue("DIAG_ADAM_" .. hint_id)
         Scenario.sHintId = hint_id
     end
@@ -64,6 +67,13 @@ function Scenario.EmmyAbilityObtained_ShowMessage(message, callback, finalcallba
     end
     GUI.ShowMessage(message, true, post_gui_callback, false)
     Game.AddSF(0.5, Game.PlayCurrentEnvironmentMusic, "")
+end
+
+function Scenario.Custom_OnResourceGranted(item_id, quantity)
+    pcall(function()
+        TEMPLATE("custom_on_resource_granted")
+    end)
+    return item_id, quantity
 end
 
 function Scenario.ReadFromPlayerBlackboard(prop_id, default)
@@ -328,6 +338,15 @@ function Scenario.OnLoadScenarioFinished()
     if platform ~= nil then
         Blackboard.SetProp("GAME_PROGRESS", CurrentScenarioID .. platform.SMARTOBJECT.sUsableEntity, "b", true)
     end
+
+    Scenario.Custom_OnScenarioLoaded(CurrentScenarioID)
+end
+
+---@diagnostic disable-next-line: unused-local
+function Scenario.Custom_OnScenarioLoaded(scenario_id)
+    pcall(function()
+        TEMPLATE("custom_on_scenario_loaded")
+    end)
 end
 
 function Scenario.CheckArtifactsObtained(actor, diag)
@@ -395,6 +414,37 @@ function Scenario.CheckDebugInputs()
     pop_debug_print_override()
 end
 
+function Scenario.Custom_OnUsableUse(actor)
+    Scenario.SetTeleportalUsed(actor)
+
+    pcall(function()
+        ---@diagnostic disable-next-line: unused-local
+        local actor_name = actor.sName
+        TEMPLATE("custom_on_usable_use")
+    end)
+end
+
+function Scenario.Custom_OnUsableCancelUse(actor)
+    Scenario.ResetGlobalTeleport(actor)
+    Scenario.CheckWarpToStart(actor)
+
+    pcall(function()
+        ---@diagnostic disable-next-line: unused-local
+        local actor_name = actor.sName
+        TEMPLATE("custom_on_usable_cancel")
+    end)
+end
+
+function Scenario.Custom_OnUsablePrepareUse(actor)
+    Scenario.DisableGlobalTeleport(actor)
+
+    pcall(function()
+        ---@diagnostic disable-next-line: unused-local
+        local actor_name = actor.sName
+        TEMPLATE("custom_on_usable_prepare")
+    end)
+end
+
 function Scenario.SetTunableValue(category, property, value)
     local tunableData = msemenu.GetTunableData(category, property)
 
@@ -404,12 +454,25 @@ end
 function Scenario.InitFromBlackboard()
     RandomizerPowerup.ApplyTunableChanges()
     RandomizerPowerup.UpdateWeapons()
+    Scenario.Custom_OnInventoryLoaded(CurrentScenarioID)
+end
+
+---@diagnostic disable-next-line: unused-local
+function Scenario.Custom_OnInventoryLoaded(scenario_id)
+    pcall(function()
+        TEMPLATE("custom_on_inventory_loaded")
+    end)
 end
 
 function Scenario.OnSubAreaChange(old_subarea, old_actorgroup, new_subarea, new_actorgroup, disable_fade)
     Scenario.UpdateProgressiveItemModels()
     Scenario.UpdateBlastShields()
     Scenario.UpdateRoomName(new_subarea)
+    pcall(function()
+        ---@diagnostic disable-next-line: unused-local
+        local scenario_id = CurrentScenarioID
+        TEMPLATE("custom_on_sub_area_change")
+    end)
 end
 
 Scenario.NumUIs = 0
