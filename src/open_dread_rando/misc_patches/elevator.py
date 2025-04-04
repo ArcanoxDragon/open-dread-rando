@@ -1,9 +1,44 @@
+import copy
 import dataclasses
 from enum import Enum
 
 from open_dread_rando.logger import LOG
 from open_dread_rando.patcher_editor import PatcherEditor
 from open_dread_rando.pickups.map_icons import MapIcon
+
+
+class TeleporterColor(Enum):
+    CYAN = 0
+    BLUE = 1
+    GREEN = 2
+    ORANGE = 3
+    PINK = 4
+    PURPLE = 5
+    RED = 6
+    YELLOW = 7
+
+    @property
+    def map_icon_name(self) -> str:
+        return f"UsableTeleport{self.map_icon_initial}"
+
+    @property
+    def map_icon_initial(self) -> str:
+        if self == TeleporterColor.CYAN:
+            return "X"
+        elif self == TeleporterColor.BLUE:
+            return "U"
+        elif self == TeleporterColor.GREEN:
+            return "O"
+        elif self == TeleporterColor.ORANGE:
+            return "Y"
+        elif self == TeleporterColor.PINK:
+            return "Z"
+        elif self == TeleporterColor.PURPLE:
+            return "E"
+        elif self == TeleporterColor.YELLOW:
+            return "I"
+        else:
+            return "A"
 
 
 class TransporterType(Enum):
@@ -32,6 +67,31 @@ class TransporterIcon:
             if trans_type.default_icon_id == usable_id:
                 return trans_type
         return None
+
+
+# Additional assets that are required for teleporters
+TELEPORTER_ADDITIONAL_ASSETS = [
+    "actors/characters/samus/animations/useteleporter.bcskla",
+    "actors/characters/samus/animations/useteleporterend.bcskla",
+    "actors/characters/samus/animations/useteleporterinit.bcskla",
+    "actors/characters/samus/cameras/useteleporterend.bccam",
+    "actors/characters/samus/cameras/useteleporterinit.bccam",
+    "actors/characters/samus/fx/imats/teleportfresnel.bsmat",
+    "actors/characters/samus/fx/teleport_fresnel.bcmdl",
+    "system/fx/generic/chozolettersfast_faster.bcptl",
+    "system/fx/generic/chozolettersfast.bcptl",
+    "system/fx/generic/chozolettersslow.bcptl",
+    "system/fx/generic/glowloop_distortionfadeout.bcptl",
+    "system/fx/generic/glowloop_distortionfastreverse.bcptl",
+    "system/fx/generic/glowloop_teleport.bcptl",
+    "system/fx/generic/glowloop_teleportend.bcptl",
+    "system/fx/generic/glowloop_teleportfast_faster.bcptl",
+    "system/fx/generic/glowloop_teleportfast.bcptl",
+    "system/fx/generic/lettersplatform.bcptl",
+    "system/fx/generic/letterstoptp.bcptl",
+    "system/fx/generic/padlight_tp.bcptl",
+    "system/fx/generic/switchlightsoff_tp.bcptl",
+]
 
 TRANSPORT_TYPES = {
     "Elevator": TransporterIcon(
@@ -110,3 +170,58 @@ def patch_elevators(editor: PatcherEditor, elevators_config: list[dict]):
         else:
             # TODO implement teleporter rando
             _patch_actor(usable, elevator)
+
+
+def add_teleporter(editor: PatcherEditor, scenario_name: str, name: str, location: tuple[float, float, float],
+                   collision_camera_name: str, destination_scenario_name: str, destination_spawn_point: str,
+                   color: TeleporterColor):
+    # Create teleporter
+    new_teleporter = copy.deepcopy(editor.resolve_actor_reference({
+        "scenario": "s020_magma",
+        "actor": "LE_Teleport_FromCave",
+    }))
+
+    new_teleporter.sName = name
+    new_teleporter.vPos = location
+    new_teleporter.pComponents.USABLE.eTeleporterColorSphere = color.value
+    new_teleporter.pComponents.USABLE.sScenarioName = destination_scenario_name
+    new_teleporter.pComponents.USABLE.sTargetSpawnPoint = destination_spawn_point
+
+    # Create platform
+    new_platform_name = f"{name}_Platform"
+    new_platform = copy.deepcopy(editor.resolve_actor_reference({
+        "scenario": "s020_magma",
+        "actor": "LE_Platform_Teleport_FromCave",
+    }))
+
+    new_platform.sName = new_platform_name
+    new_platform.vPos = location
+    new_platform.pComponents.SMARTOBJECT.sUsableEntity = name
+
+    # Add new actors to scenario
+    scenario = editor.get_scenario(scenario_name)
+    scenario.actors_for_sublayer("default")[name] = new_teleporter
+    scenario.add_actor_to_actor_groups(f"eg_{collision_camera_name}", name)
+    scenario.actors_for_sublayer("default")[new_platform_name] = new_platform
+    scenario.add_actor_to_actor_groups(f"eg_{collision_camera_name}", new_platform_name)
+
+    # Add map icon
+    magma_map = editor.get_scenario_map("s020_magma")
+    scenario_map = editor.get_scenario_map(scenario_name)
+    new_map_icon = copy.deepcopy(magma_map.get_category("mapUsables")["LE_Teleport_FromCave"])
+    new_map_icon.vPos = new_teleporter.vPos[:2]
+    new_map_icon.oBox.Min = [c + offset for c, offset in zip(new_teleporter.vPos, (-150.0, 0.0))]
+    new_map_icon.oBox.Max = [c + offset for c, offset in zip(new_teleporter.vPos, (150.0, 500.0))]
+    new_map_icon.sIconId = color.map_icon_name
+    scenario_map.get_category("mapUsables")[name] = new_map_icon
+
+    # Ensure scenario package has necessary assets for teleporters
+    for charclass in [
+        "actors/props/teleporter",
+        "actors/props/weightactivatedplatform_teleport",
+    ]:
+        for asset_id in editor.get_asset_names_in_folder(charclass):
+            editor.ensure_present_in_scenario(scenario_name, asset_id)
+
+    for asset_id in TELEPORTER_ADDITIONAL_ASSETS:
+        editor.ensure_present_in_scenario(scenario_name, asset_id)

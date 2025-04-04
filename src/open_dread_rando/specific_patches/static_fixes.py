@@ -2,13 +2,15 @@ import copy
 from typing import Optional
 
 import construct
-from mercury_engine_data_structures.formats import Bmmap, Brfld
+from mercury_engine_data_structures.formats import Bmmap, Bmmdef, Brfld
 from mercury_engine_data_structures.formats.dread_types import CDoorLifeComponent_SState
 from mercury_engine_data_structures.formats.gui_files import Bmscp
 
 from open_dread_rando.constants import ALL_SCENARIOS
 from open_dread_rando.door_locks import door_patcher
 from open_dread_rando.logger import LOG
+from open_dread_rando.misc_patches.elevator import TeleporterColor, add_teleporter
+from open_dread_rando.misc_patches.text_patches import patch_text
 from open_dread_rando.patcher_editor import PatcherEditor
 from open_dread_rando.pickups.map_icons import MapIconEditor
 
@@ -378,175 +380,22 @@ def apply_experiment_fixes(editor: PatcherEditor):
     })
 
 
-TELEPORTER_ASSET_DEPENDENCIES = [
-    "actors/characters/samus/animations/useteleporter.bcskla",
-    "actors/characters/samus/animations/useteleporterend.bcskla",
-    "actors/characters/samus/animations/useteleporterinit.bcskla",
-    "actors/characters/samus/cameras/useteleporterend.bccam",
-    "actors/characters/samus/cameras/useteleporterinit.bccam",
-    "actors/characters/samus/fx/imats/teleportfresnel.bsmat",
-    "actors/characters/samus/fx/teleport_fresnel.bcmdl",
-    "actors/props/footstepplatform/charclasses/footstepplatform.bmsad",
-    "actors/props/footstepplatform/charclasses/timeline.bmsas",
-    "actors/props/footstepplatform/collisions/footstepplatform.bmscd",
-    "actors/props/footstepplatform/models/footstepplatform.bcmdl",
-    "actors/props/footstepplatform/models/imats/footstepplatform_mat01.bsmat",
-    "actors/props/teleporter/animations/closed.bcskla",
-    "actors/props/teleporter/animations/useteleport.bcskla",
-    "actors/props/teleporter/animations/useteleporter.bcskla",
-    "actors/props/teleporter/animations/useteleporterend.bcskla",
-    "actors/props/teleporter/animations/useteleporterinit.bcskla",
-    "actors/props/teleporter/charclasses/teleporter.bmsad",
-    "actors/props/teleporter/charclasses/teleporter.bmsas",
-    "actors/props/teleporter/charclasses/timeline.bmsas",
-    "actors/props/teleporter/fx/imats/trail_inactive_top_trail_inactive.bsmat",
-    "actors/props/teleporter/fx/trail_inactive_top.bcmdl",
-    "actors/props/weightactivatedplatform_teleport/charclasses/timeline.bmsas",
-    "actors/props/weightactivatedplatform_teleport/charclasses/weightactivatedplatform_teleport.bmsad",
-    "actors/props/weightactivatedplatform_teleport/charclasses/weightactivatedplatform_teleport.bmsas",
-    "actors/props/weightactivatedplatform_teleport/fx/imats/platform_glow_basicglow.bsmat",
-    "actors/props/weightactivatedplatform_teleport/fx/imats/platform_glow_outterglow.bsmat",
-    "actors/props/weightactivatedplatform_teleport/fx/imats/shaft_teleport_material.bsmat",
-    "actors/props/weightactivatedplatform_teleport/fx/imats/trails_inactive_trail_inactive_platform.bsmat",
-    "actors/props/weightactivatedplatform_teleport/fx/platform_glow.bcmdl",
-    "actors/props/weightactivatedplatform_teleport/fx/shaft_teleport.bcmdl",
-    "actors/props/weightactivatedplatform_teleport/fx/shaft_teleport.bcptl",
-    "actors/props/weightactivatedplatform_teleport/fx/trails_inactive.bcmdl",
-    "actors/props/weightactivatedplatform_teleport/models/imats/platform_teleporter_base.bsmat",
-    "actors/props/weightactivatedplatform_teleport/models/imats/platform_teleporter_cables.bsmat",
-    "actors/props/weightactivatedplatform_teleport/models/platform_teleporter.bcmdl",
-    "system/fx/generic/chozolettersfast_faster.bcptl",
-    "system/fx/generic/chozolettersfast.bcptl",
-    "system/fx/generic/chozolettersslow.bcptl",
-    "system/fx/generic/glowloop_distortionfadeout.bcptl",
-    "system/fx/generic/glowloop_distortionfastreverse.bcptl",
-    "system/fx/generic/glowloop_teleport.bcptl",
-    "system/fx/generic/glowloop_teleportend.bcptl",
-    "system/fx/generic/glowloop_teleportfast_faster.bcptl",
-    "system/fx/generic/glowloop_teleportfast.bcptl",
-    "system/fx/generic/lettersplatform.bcptl",
-    "system/fx/generic/letterstoptp.bcptl",
-    "system/fx/generic/padlight_tp.bcptl",
-    "system/fx/generic/switchlightsoff_tp.bcptl",
-]
-
-
 def add_pink_teleporters(editor: PatcherEditor):
-    magma_map = editor.get_scenario_map("s020_magma")
-    basesanc = editor.get_scenario("s070_basesanc")
-    basesanc_map = editor.get_scenario_map("s070_basesanc")
-    shipyard = editor.get_scenario("s080_shipyard")
-    shipyard_map = editor.get_scenario_map("s080_shipyard")
-
-    new_ferenia_platform_name = "LE_Platform_Teleport_BasesancPink"
-    new_ferenia_teleporter_name = "LE_Teleport_BasesancPink"
-    new_hanubia_platform_name = "LE_Platform_Teleport_ShipyardPink"
-    new_hanubia_teleporter_name = "LE_Teleport_ShipyardPink"
-
-    ##########
     # Ferenia
-    ##########
+    add_teleporter(editor, "s070_basesanc", "LE_Teleport_BasesancPink", (2750.0, -1500.0, 0.0),
+                   "collision_camera_024", "s080_shipyard", "LE_Teleport_ShipyardPink", TeleporterColor.PINK)
 
-    # Create Ferenia teleporter
-    new_ferenia_teleporter = copy.deepcopy(editor.resolve_actor_reference({
-        "scenario": "s020_magma",
-        "actor": "LE_Teleport_FromCave",
-    }))
-
-    new_ferenia_teleporter.sName = new_ferenia_teleporter_name
-    new_ferenia_teleporter.vPos = (2700.0, -1500.0, 0.0)
-    new_ferenia_teleporter.pComponents.USABLE.eTeleporterColorSphere = 4
-    new_ferenia_teleporter.pComponents.USABLE.sScenarioName = "s080_shipyard"
-    new_ferenia_teleporter.pComponents.USABLE.sTargetSpawnPoint = new_hanubia_teleporter_name
-
-    # Create Ferenia platform
-    new_ferenia_platform = copy.deepcopy(editor.resolve_actor_reference({
-        "scenario": "s020_magma",
-        "actor": "LE_Platform_Teleport_FromCave",
-    }))
-
-    new_ferenia_platform.sName = new_ferenia_platform_name
-    new_ferenia_platform.vPos = (2700.0, -1500.0, 0.0)
-    new_ferenia_platform.pComponents.SMARTOBJECT.sUsableEntity = new_ferenia_teleporter_name
-
-    # Add new actors to Ferenia
-    basesanc.actors_for_sublayer("default")[new_ferenia_teleporter_name] = new_ferenia_teleporter
-    editor.copy_actor_groups(
-        { "actor": "mlm_block_000" },
-        { "actor": new_ferenia_teleporter_name },
-        "s070_basesanc"
-    )
-    basesanc.actors_for_sublayer("default")[new_ferenia_platform_name] = new_ferenia_platform
-    editor.copy_actor_groups(
-        { "actor": "mlm_block_000" },
-        { "actor": new_ferenia_platform_name },
-        "s070_basesanc"
-    )
-
-    # Add Ferenia map icon
-    new_ferenia_map_icon = copy.deepcopy(magma_map.get_category("mapUsables")["LE_Teleport_FromCave"])
-    new_ferenia_map_icon.vPos = new_ferenia_teleporter.vPos[:2]
-    new_ferenia_map_icon.oBox.Min = [c + offset for c, offset in zip(new_ferenia_teleporter.vPos, (-150.0, 0.0))]
-    new_ferenia_map_icon.oBox.Max = [c + offset for c, offset in zip(new_ferenia_teleporter.vPos, (150.0, 500.0))]
-    new_ferenia_map_icon.sIconId = "UsableTeleportZ"
-    basesanc_map.get_category("mapUsables")[new_ferenia_teleporter_name] = new_ferenia_map_icon
-
-    ##########
     # Hanubia
-    ##########
+    add_teleporter(editor, "s080_shipyard", "LE_Teleport_ShipyardPink", (-5900.0, -1000.0, 0.0),
+                   "collision_camera_004", "s070_basesanc", "LE_Teleport_BasesancPink", TeleporterColor.PINK)
 
-    # Create Hanubia teleporter
-    new_hanubia_teleporter = copy.deepcopy(editor.resolve_actor_reference({
-        "scenario": "s020_magma",
-        "actor": "LE_Teleport_FromCave",
-    }))
+    # Fix sprite position of "UsableTeleportZ" icon (in the base game, it points to Cyan instead of Pink on the spritesheet)
+    minimap_bmmdef = editor.get_file("system/minimap/minimap.bmmdef", Bmmdef)
+    z_icon = minimap_bmmdef.icons["UsableTeleportZ"]
+    z_icon.uSpriteCol = 15
 
-    new_hanubia_teleporter.sName = new_hanubia_teleporter_name
-    new_hanubia_teleporter.vPos = (-5900.0, -1000.0, 0.0)
-    new_hanubia_teleporter.pComponents.USABLE.eTeleporterColorSphere = 4
-    new_hanubia_teleporter.pComponents.USABLE.sScenarioName = "s070_basesanc"
-    new_hanubia_teleporter.pComponents.USABLE.sTargetSpawnPoint = new_ferenia_teleporter_name
-
-    # Create Hanubia platform
-    new_hanubia_platform = copy.deepcopy(editor.resolve_actor_reference({
-        "scenario": "s020_magma",
-        "actor": "LE_Platform_Teleport_FromCave",
-    }))
-
-    new_hanubia_platform.sName = new_hanubia_platform_name
-    new_hanubia_platform.vPos = (-5900.0, -1000.0, 0.0)
-    new_hanubia_platform.pComponents.SMARTOBJECT.sUsableEntity = new_hanubia_teleporter_name
-
-    # Add new actors to Hanubia
-    shipyard.actors_for_sublayer("default")[new_hanubia_teleporter_name] = new_hanubia_teleporter
-    editor.copy_actor_groups(
-        { "actor": "ammorecharge_000" },
-        { "actor": new_hanubia_teleporter_name },
-        "s080_shipyard"
-    )
-    shipyard.actors_for_sublayer("default")[new_hanubia_platform_name] = new_hanubia_platform
-    editor.copy_actor_groups(
-        { "actor": "ammorecharge_000_platform" },
-        { "actor": new_hanubia_platform_name },
-        "s080_shipyard"
-    )
-
-    # Add Hanubia map icon
-    tpos = (-5900.0, -1000.0, 0.0)
-    new_hanubia_map_icon = copy.deepcopy(magma_map.get_category("mapUsables")["LE_Teleport_FromCave"])
-    #new_hanubia_map_icon.vPos = new_hanubia_teleporter.vPos[:2]
-    new_hanubia_map_icon.vPos = tpos[:2]
-    new_hanubia_map_icon.oBox.Min = [c + offset for c, offset in zip(tpos, (-150.0, 0.0))]
-    new_hanubia_map_icon.oBox.Max = [c + offset for c, offset in zip(tpos, (150.0, 500.0))]
-    new_hanubia_map_icon.sIconId = "UsableTeleportZ"
-    shipyard_map.get_category("mapUsables")[new_hanubia_teleporter_name] = new_hanubia_map_icon
-
-    # Ensure Hanubia has necessary assets for teleporters
-    pkgs_for_hanubia = editor.get_level_pkgs("s080_shipyard")
-
-    for pkg_name in pkgs_for_hanubia:
-        for asset_id in TELEPORTER_ASSET_DEPENDENCIES:
-            editor.ensure_present(pkg_name, asset_id)
+    # Add translation for the map icon label
+    patch_text(editor, "MAP_ICON_TELEPORT_STATION_Z", "TELEPORTAL (PINK)")
 
 
 def apply_main_menu_fixes(editor: PatcherEditor):
