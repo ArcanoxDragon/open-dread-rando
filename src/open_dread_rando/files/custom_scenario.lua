@@ -204,7 +204,8 @@ local scenarios_with_teleport = {
     s030_baselab = "savestation_000",
     s040_aqua = "savestation_000",
     s050_forest = "savestation_000",
-    s070_basesanc = "savestation_000"
+    s070_basesanc = "savestation_000",
+    s080_shipyard = "StartPoint0"
 }
 
 function Scenario.VisitAllTeleportScenarios()
